@@ -43,11 +43,10 @@
             top: 50px;
             left: 10px;
             z-index: 1000;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 15px;
-            border-radius: 8px;
-            display: none;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            background: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            display: flex;
         }
         #filter-container label {
             margin-right: 10px;
@@ -59,7 +58,7 @@
         #filter-container.compact {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 5px;
         }
         .category-color {
             width: 12px;
@@ -84,6 +83,41 @@
             margin: 0;
             font-size: 12px;
         }
+        .category-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 0;
+        }
+        .toggle-button {
+            padding: 4px 8px;
+            font-size: 14px;
+            background-color: #ffffff;
+            color: #333333;
+            border: 1px solid #cccccc;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            font-weight: 500;
+            white-space: nowrap;
+            min-width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .toggle-button:hover {
+            background-color: #f0f0f0;
+            border-color: #999999;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+            transform: translateY(-1px);
+        }
+        .toggle-button:active {
+            background-color: #e0e0e0;
+            transform: translateY(0);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
     </style>
 </head>
 <body>
@@ -94,8 +128,7 @@
         </svg>
     </div>
     <div id="filter-container" class="compact">
-        <label><input type="checkbox" id="filter-tourism" checked> 観光</label>
-        <label><input type="checkbox" id="filter-accommodation" checked> 宿泊</label>
+        <!-- 初期表示のチェックボックスを削除 -->
     </div>
 
     <script>
@@ -286,17 +319,46 @@
                     closeOnClick: false
                 });
 
+                let isPopupFixed = false; // ポップアップが固定されているかどうかのフラグ
+
                 // マウスオーバー時のイベント
-                map.on('mouseenter', 'marker-layer', () => {
+                map.on('mouseenter', 'marker-layer', (e) => {
                     map.getCanvas().style.cursor = 'pointer';
+                    if (!isPopupFixed) { // 固定されていない場合のみ新しいポップアップを表示
+                        const features = map.queryRenderedFeatures(e.point, {
+                            layers: ['marker-layer']
+                        });
+
+                        if (features.length > 0) {
+                            const feature = features[0];
+                            const coordinates = feature.geometry.coordinates.slice();
+                            const properties = feature.properties;
+
+                            const html = `
+                                <div class="popup">
+                                    <h3>${properties.name}</h3>
+                                    <p>${properties.place || ''}</p>
+                                    ${properties.description ? `<p>${properties.description}</p>` : ''}
+                                    ${properties.link ? `<p><a href="${properties.link}" target="_blank">詳細を見る</a></p>` : ''}
+                                </div>
+                            `;
+
+                            popup.setLngLat(coordinates)
+                                .setHTML(html)
+                                .addTo(map);
+                        }
+                    }
                 });
 
                 map.on('mouseleave', 'marker-layer', () => {
                     map.getCanvas().style.cursor = '';
-                    popup.remove();
+                    if (!isPopupFixed) { // 固定されていない場合のみポップアップを消す
+                        popup.remove();
+                    }
                 });
 
-                map.on('mousemove', 'marker-layer', (e) => {
+                // マーカークリックイベント
+                map.on('click', 'marker-layer', (e) => {
                     const features = map.queryRenderedFeatures(e.point, {
                         layers: ['marker-layer']
                     });
@@ -315,9 +377,27 @@
                             </div>
                         `;
 
+                        // 既存のポップアップを削除
+                        popup.remove();
+
+                        // 新しいポップアップを表示
                         popup.setLngLat(coordinates)
                             .setHTML(html)
                             .addTo(map);
+
+                        isPopupFixed = true; // ポップアップを固定状態に
+                    }
+                });
+
+                // マップの他の部分をクリックした時のイベント
+                map.on('click', (e) => {
+                    const features = map.queryRenderedFeatures(e.point, {
+                        layers: ['marker-layer']
+                    });
+                    
+                    if (features.length === 0) {
+                        popup.remove();
+                        isPopupFixed = false; // ポップアップの固定を解除
                     }
                 });
 
@@ -328,13 +408,53 @@
                 // 実際に存在するカテゴリーのみをフィルターに追加
                 Array.from(categories).forEach(category => {
                     const style = CATEGORY_STYLES[category] || { color: '#CCCCCC', size: 6 };
+                    const categoryRow = document.createElement('div');
+                    categoryRow.className = 'category-row';
+                    
                     const categoryLabel = document.createElement('label');
                     categoryLabel.innerHTML = `
                         <input type="checkbox" class="category-filter" data-category="${category}" checked>
                         <span class="category-color" style="background-color: ${style.color}"></span>
                         ${category}
                     `;
-                    filterContainer.appendChild(categoryLabel);
+
+                    const toggleButton = document.createElement('button');
+                    toggleButton.className = 'toggle-button';
+                    toggleButton.innerHTML = '🔍';
+                    toggleButton.title = 'これだけ表示';
+                    let isSoloMode = false; // 単一表示モードの状態を管理
+
+                    toggleButton.onclick = (e) => {
+                        e.preventDefault();
+                        const checkboxes = document.querySelectorAll('.category-filter');
+                        const currentCategory = category;
+                        
+                        if (!isSoloMode) {
+                            // 単一表示モードに切り替え
+                            checkboxes.forEach(checkbox => {
+                                if (checkbox.dataset.category === currentCategory) {
+                                    checkbox.checked = true;
+                                } else {
+                                    checkbox.checked = false;
+                                }
+                            });
+                            toggleButton.title = '全表示';
+                            isSoloMode = true;
+                        } else {
+                            // 全表示モードに切り替え
+                            checkboxes.forEach(checkbox => {
+                                checkbox.checked = true;
+                            });
+                            toggleButton.title = 'これだけ表示';
+                            isSoloMode = false;
+                        }
+                        
+                        updateMarkers();
+                    };
+
+                    categoryRow.appendChild(categoryLabel);
+                    categoryRow.appendChild(toggleButton);
+                    filterContainer.appendChild(categoryRow);
                 });
 
                 // フィルタリング機能

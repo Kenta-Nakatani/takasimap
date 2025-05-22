@@ -163,33 +163,38 @@
             const categories = new Map(); // カテゴリとサブカテゴリを収集するためのマップ
 
             points.forEach(point => {
-                const [id, category, subcategory, name, latitude, longitude, description, link] = point; // スプレッドシートの列順に対応
+                const [id, category, subcategory, name, place, latitude, longitude, description, link] = point; // スプレッドシートの列順に対応
                 const lat = parseFloat(latitude);
                 const lon = parseFloat(longitude);
 
                 if (isNaN(lat) || isNaN(lon)) {
                     console.error(`Invalid coordinates for point: ${name}`);
+                    console.error(`Latitude: ${latitude}, Longitude: ${longitude}`);
                     return; // 無効な座標はスキップ
+
+                }
+                else{
+
+                    // マーカーをMapboxのソースとして追加
+                    markers.push({
+                        id,
+                        category,
+                        subcategory,
+                        coordinates: [lon, lat],
+                        properties: {
+                            name,
+                            description,
+                            link
+                        }
+                    });
                 }
 
                 // カテゴリとサブカテゴリをマップに追加
                 if (!categories.has(category)) {
                     categories.set(category, new Set());
                 }
-                categories.get(category).add(subcategory);
+                // categories.get(category).add(subcategory);
 
-                // マーカーをMapboxのソースとして追加
-                markers.push({
-                    id,
-                    category,
-                    subcategory,
-                    coordinates: [lon, lat],
-                    properties: {
-                        name,
-                        description,
-                        link
-                    }
-                });
             });
 
             // Mapboxのソースとレイヤーを追加

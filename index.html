@@ -1,37 +1,64 @@
 <!DOCTYPE html>
-// HTML5の宣言。この行はドキュメントがHTML5で書かれていることをブラウザに伝えます。
+<!--HTML5の宣言。この行はドキュメントがHTML5で書かれていることをブラウザに伝えます。-->
 <html lang="ja">
-// HTML文書の開始。
-// lang="ja" は、このページの言語が日本語であることを指定しています（SEOや音声読み上げなどで使われます）。
+<!--// HTML文書の開始。-->
+<!--lang="ja" は、このページの言語が日本語であることを指定しています（SEOや音声読み上げなどで使われます）。-->
 <head>
-// headタグの開始。この中にはメタ情報（ページの設定・外部ファイルの読み込みなど）が含まれます。
+<!--headタグの開始。この中にはメタ情報（ページの設定・外部ファイルの読み込みなど）が含まれます。-->
     <meta charset="UTF-8">
+    <!--文字コードをUTF-8に設定。日本語など多言語に対応できる文字エンコーディングです。-->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--モバイル対応のための設定。デバイスの画面幅に合わせて表示スケールを1に設定します。-->
     <title>Mapbox Zoom Example</title>
+    <!--ブラウザのタブに表示されるページタイトルです。-->
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.8.0/mapbox-gl.js"></script>
+    <!--MapboxのJavaScriptライブラリを読み込みます。地図を描画・操作するためのスクリプトです。-->
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.8.0/mapbox-gl.css" rel="stylesheet" />
+    <!--Mapbox用のスタイル（CSS）を読み込みます。地図表示の見た目を整えるものです。-->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <!--GSAP（アニメーションライブラリ）の読み込み。滑らかなアニメーションをJSで簡単に実装できるツールです。-->
     <style>
+    /*HTML内に直接CSSを書くためのスタイルタグを開始しています。*/
         body {
+        /*ページ全体のbodyタグに対してスタイルを設定しています。*/
             margin: 0;
+            /*ブラウザのデフォルト余白を無効にします。*/
             padding: 0;
+            /*同様に、内側の余白（パディング）も無効にしています。*/
             display: flex;
+            /*Flexboxレイアウトを使うことで、子要素の配置を柔軟に制御できます。*/
             flex-direction: column;
+            /*要素を縦方向に並べる設定です（デフォルトは横並び）。*/
             height: 100vh;
+            /*vhはviewport heightの略で、画面の高さ100%を意味します。*/
             background-color: #2C2C2C;
+            /*背景色をカラーコードで設定しています。*/
             color: #D3D3D3;
+            /*文字の色をカラーコードで設定しています。*/
         }
+        /*bodyタグへのスタイル設定終了。*/
         #map {
+        /*IDがmapの要素にスタイルを適用します（地図表示エリアのこと）。*/
             flex: 1;
+            /*Flexbox内で残りのスペースを全部使う設定です。*/
             width: 100%;
+            /*横幅を画面いっぱいに広げます。*/
         }
+        /*#mapのスタイル設定終了。*/
         #toggle-switch {
+        /*IDがtoggle-switchの要素に対するスタイルです。おそらくボタンかスイッチ的なUIです。*/
             position: absolute;
+            /*位置を絶対指定にし、ページ内の好きな場所に配置できるようにします。*/
             top: 10px;
+            /*上から10ピクセルの位置に配置します。*/
             left: 10px;
+            /*左から10ピクセルの位置に配置します。*/
             z-index: 1000;
+            /*表示の重なり順を高くして、地図など他の要素より上に表示されるようにします。*/
             display: flex;
+            /*toggle-switch内の要素を横並びにしたり、中央揃えするための設定です。*/
             align-items: center;
+            /*Flexbox内で縦方向の中央揃えをします（ボタンとラベルを中央に揃えるなどに使います）。*/
             justify-content: center;
             width: 40px;
             height: 40px;
